@@ -1,0 +1,1 @@
+web: gunicorn 'auction:create_app()'

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% block content %}
+<main style="margin-top: 100px;">
+
+    <div class="container">
+      <h2 class="responsive-heading my-4 text-center text-lg-left">{{listing.title}}</h2>
+      <div class="row">
+        <div class="col-md-12 col-lg-6 mb-3">
+          <img class="img-fluid"
+            src="{{listing.image_url}}"
+            alt="Listing Image">
+        </div>
+
+        <div class="col-md-12 col-lg-6">
+
+          <div class="text-center text-lg-left">
+
+            <!-- Update status icon if auction closed --> 
+
+            {% if listing.status == 'Active' %}
+            <p class="d-block mb-4"><i class="fas fa-check-circle text-success"></i><span class="text-muted">
+                Status:</span><strong> {{listing.status}}</strong></p>
+            {% else %}
+            <p class="d-block mb-4"><i class="fas fa-times-circle text-danger"></i><span class="text-muted">
+                Status:</span><strong> {{listing.status}}</strong></p>
+            {% endif %}
+
+            <p class="d-block mb-4"><i class="fas fa-user blue-text"></i><span class="text-muted">
+                Seller:</span><strong> {{listing.seller}}</strong></p>
+
+            <!-- Update end date if auction closed --> 
+
+            {% if listing.status == 'Active' %}
+            <p class="d-block mb-4"><i class="fas fa-clock text-warning"></i><span class="text-muted">
+                End Date:</span><strong> {{listing.end_date}}</strong></p>
+            {% else %}
+            <p class="d-block mb-4"><i class="fas fa-clock text-warning"></i><span class="text-muted">
+              End Date:</span><strong> Already ended</strong></p>
+            {% endif %}
+
+            <p class="d-block mb-4"><i class="fas fa-shield-alt text-info"></i><span class="text-muted">
+                Condition:</span><strong> {{listing.condition}}</strong></p>
+            <p class="d-block mb-4"><i class="fas fa-sort-numeric-up-alt text-muted"></i><span class="text-muted"> Total
+                Bids:</span><strong> {{listing.total_bids}}</strong></p>
+            <p class="d-block mb-4"><i class="fas fa-tags orange-icon"></i><span class="text-muted"> Starting Bid:</span><strong> ${{listing.starting_bid}}</strong></p>
+            
+            <!-- Hide Watch list button if auction closed --> 
+
+            {% if listing.status == 'Active' %}
+            <form class="d-inline" action="{{url_for('listing.add_watchlist', listing=listing.id)}}" method="POST">
+              <button class="btn btn-blue" type="submit"><i class="fas fa-eye"></i> Watch List</button>
+            </form>
+            {% endif %}
+          </div>
+
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+          <!-- check if there are any messages -->
+          <div class="row mt-3 mb-3">
+            <div class="col-md-12">
+              {% for category, message in messages %}
+              <!--loop through the messages-->
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+              <!--display as alert-->
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+          {% endwith %}
+
+          <div class="row border py-3 shadow mt-3">
+            <!-- Left Side -->
+            <div class="col-lg-3 text-center">
+              {% if listing.total_bids > 0 %}
+              <p>Current Bid</p>
+              {% else %}
+              <p>Starting Bid</p>
+              {% endif %}
+              <h4 class="orange-icon">${{listing.current_bid}}</h4>
+            </div>
+
+            <!-- Right Side -->
+            <form action="{{ url_for('listing.placebid', listing=listing.id)}}" method="POST" role="form" class="col-lg-9 d-flex align-items-center justify-content-center border-left">
+              {{ bidform.csrf_token() }}
+              {% if listing.status == 'Active' %}
+              <div class="input-group justify-content-center pt-3">
+                {{ wtf.form_field(bidform.bid_amount, class='bid-input', placeholder='Bid amount...') }}
+                <div class="input-group-append">
+                  {{wtf.form_field(bidform.submit, class="btn btn-blue bid-btn")}}
+                </div>
+              </div>
+              {% else %}
+              <p><em>This auction is closed</em></p>
+              {% endif %}
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <div class="row my-3">
+        <div class="reviews-box col-md-12 pr-0">
+          <div class="card text-center">
+
+            <div class="card-header">
+              <ul class="nav nav-tabs card-header-tabs">
+                <li class="nav-item">
+                  <a href="#itemdescription" class="nav-link active" role="tab" data-toggle="tab">Description</a>
+                </li>
+                <li class="nav-item">
+                  <a href="#itemdetails" class="nav-link" role="tab" data-toggle="tab">Item Details</a>
+                </li>
+                <li class="nav-item">
+                  <a href="#reviews" class="nav-link" role="tab" data-toggle="tab">Reviews</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#reviewsModal" data-toggle="modal" data-target="#reviewsModal">Post Review</a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="tab-content">
+              <div role="tabpanel1" class="card-body tab-pane text-left active" id="itemdescription">
+                <p>{{listing.description}}</p>
+              </div>
+                
+              <div role="tabpanel1" class="card-body tab-pane text-left" id="itemdetails">
+                <p>{{listing.cpu}} processor</p>
+                <p>{{listing.ram_gb}} RAM</p>
+                <p>{{listing.storage_gb}} storage</p>
+              </div>
+  
+              <div role="tabpanel1" class="card-body tab-pane text-left" id="reviews">
+                {% for review in listing.reviews %}
+                <div class="mb-4 border-bottom">
+                  <b>{{review.user.name}}<span class="ml-2 text-muted">{{review.created_at}}</span></b>  
+                  <h5 class="review-title mt-2">{{review.title}}</h5>
+                  <p class="review-description">{{review.feedback}}</p>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+
+            <!--Modal for posting reviews-->
+            <div class="modal fade" id="reviewsModal" tabindex="-1" role="dialog"
+              aria-labelledby="reviewModal aria-hidden=" true>
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Leave a review</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body text-left">
+                    {{wtf.quick_form(form, "/listings/{0}/review".format(listing.id))}}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+  </main>
+{% endblock %}

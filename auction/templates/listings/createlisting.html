@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% import "bootstrap/wtf.html" as wtf %}
+{% block content %}
+<div class="main">
+  <div class="container jumbotron mt-4 pt-3 pb-3" style>
+    <div class="row align-items-center">
+      <div class="col-md-8 text-center text-md-left">
+        <h1 class="responsive-heading">Create New Listing</h1>
+        <p>List your computers with us for a faster sale, and a better offer!</p>
+      </div>
+
+      <div class="col-md-4">
+        <img class="img-fluid" src="{{url_for('static', filename='img/createlisting.svg')}}">
+      </div>
+    </div>
+  </div>
+  
+  <div class="container">
+    
+    <!-- Show Message when user posts listing -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <!-- check if there are any messages -->
+    <div class="row mt-3 mb-3">
+      <div class="col-md-12">
+        {% for category, message in messages %}
+        <!--loop through the messages-->
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        <!--display as alert-->
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endwith %}
+    
+    <div class="row mt-2">
+      <div class="col-md-12">
+        {{wtf.quick_form(form)}}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
